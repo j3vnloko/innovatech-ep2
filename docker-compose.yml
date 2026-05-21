@@ -1,0 +1,52 @@
+version: '3.8'
+
+services:
+
+  db:
+    image: mysql:8.0
+    container_name: innovatech-db
+    environment:
+      MYSQL_ROOT_PASSWORD: admin123
+      MYSQL_DATABASE: despachos_db
+      MYSQL_USER: appuser
+      MYSQL_PASSWORD: apppass123
+    ports:
+      - "3306:3306"
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - innovatech-net
+
+  backend:
+    build: ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
+    container_name: innovatech-backend
+    environment:
+      DB_ENDPOINT: db
+      DB_PORT: 3306
+      DB_NAME: despachos_db
+      DB_USERNAME: appuser
+      DB_PASSWORD: apppass123
+    ports:
+      - "8081:8081"
+    depends_on:
+      - db
+    networks:
+      - innovatech-net
+
+  frontend:
+    build: ./front_despacho
+    container_name: innovatech-frontend
+    ports:
+      - "80:80"
+    depends_on:
+      - backend
+    networks:
+      - innovatech-net
+
+volumes:
+  db_data:
+    name: innovatech_db_data
+
+networks:
+  innovatech-net:
+    driver: bridge
