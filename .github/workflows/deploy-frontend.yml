@@ -27,19 +27,25 @@ jobs:
 
       - name: Build y Push imagen Frontend
         run: |
-          docker build -t ${{ secrets.ECR_REGISTRY }}/innovatech-frontend:latest \
+          docker build \
+            --build-arg VITE_API_URL=http://${{ secrets.ALB_BACKEND_DNS }} \
+            -t ${{ secrets.ECR_REGISTRY }}/innovatech-frontend:latest \
             ./front_despacho
           docker push ${{ secrets.ECR_REGISTRY }}/innovatech-frontend:latest
 
-      - name: Deploy en EC2 via SSM
-        run: |
-          aws ssm send-command \
-            --instance-ids ${{ secrets.EC2_FRONTEND_INSTANCE_ID }} \
-            --document-name "AWS-RunShellScript" \
-            --parameters commands='[
-              "aws ecr get-login-password --region ${{ secrets.AWS_REGION }} | docker login --username AWS --password-stdin ${{ secrets.ECR_REGISTRY }}",
-              "docker pull ${{ secrets.ECR_REGISTRY }}/innovatech-frontend:latest",
-              "docker stop innovatech-frontend || true",
-              "docker rm innovatech-frontend || true",
-              "docker run -d --name innovatech-frontend -p 80:80 ${{ secrets.ECR_REGISTRY }}/innovatech-frontend:latest"
-            ]'
+      # ── EP3: reemplaza el deploy via SSM por actualización del servicio ECS ──
+      - name: Registrar nueva Task Definition en ECS
+        id: task-def
+        uses: aws-actions/amazon-ecs-render-task-definition@v1
+        with:
+          task-definition: ecs/task-definition-frontend.json
+          container-name: innovatech-frontend
+          image: ${{ secrets.ECR_REGISTRY }}/innovatech-frontend:latest
+
+      - name: Deploy en Amazon ECS
+        uses: aws-actions/amazon-ecs-deploy-task-definition@v1
+        with:
+          task-definition: ${{ steps.task-def.outputs.task-definition }}
+          service: ${{ secrets.ECS_SERVICE_FRONTEND }}
+          cluster: ${{ secrets.ECS_CLUSTER }}
+          wait-for-service-stability: true
