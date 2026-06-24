@@ -38,3 +38,4 @@ Se usa **named volume** (`db_data`) para persistencia de la base de datos, garan
 - AWS SSM
 - Spring Boot
 - React + Vite
+-  # EP3 deploy test
