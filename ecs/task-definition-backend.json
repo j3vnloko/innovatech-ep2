@@ -1,0 +1,38 @@
+{
+  "family": "innovatech-backend",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": ["FARGATE"],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::992382690811:role/LabRole",
+  "taskRoleArn": "arn:aws:iam::992382690811:role/LabRole",
+  "containerDefinitions": [
+    {
+      "name": "innovatech-backend",
+      "image": "992382690811.dkr.ecr.us-east-1.amazonaws.com/innovatech-backend:latest",
+      "portMappings": [
+        {
+          "containerPort": 8081,
+          "hostPort": 8081,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        { "name": "DB_PORT", "value": "3306" },
+        { "name": "DB_NAME", "value": "despachos_db" },
+        { "name": "DB_ENDPOINT", "value": "localhost" },
+        { "name": "DB_USERNAME", "value": "appuser" },
+        { "name": "DB_PASSWORD", "value": "apppass123" }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/innovatech-backend",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      },
+      "essential": true
+    }
+  ]
+}
