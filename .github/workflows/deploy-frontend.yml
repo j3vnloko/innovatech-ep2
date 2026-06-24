@@ -1,18 +1,14 @@
 name: CI/CD Frontend Despachos
-
 on:
   push:
     branches:
       - deploy
-
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout código
         uses: actions/checkout@v3
-
       - name: Configurar credenciales AWS
         uses: aws-actions/configure-aws-credentials@v2
         with:
@@ -20,11 +16,9 @@ jobs:
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-session-token: ${{ secrets.AWS_SESSION_TOKEN }}
           aws-region: ${{ secrets.AWS_REGION }}
-
       - name: Login a Amazon ECR
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
-
       - name: Build y Push imagen Frontend
         run: |
           docker build \
@@ -32,16 +26,13 @@ jobs:
             -t ${{ secrets.ECR_REGISTRY }}/innovatech-frontend:latest \
             ./front_despacho
           docker push ${{ secrets.ECR_REGISTRY }}/innovatech-frontend:latest
-
-      # ── EP3: reemplaza el deploy via SSM por actualización del servicio ECS ──
       - name: Registrar nueva Task Definition en ECS
         id: task-def
         uses: aws-actions/amazon-ecs-render-task-definition@v1
         with:
-          task-definition: ecs/task-definition-frontend.json
+          task-definition: task-definition-frontend.json
           container-name: innovatech-frontend
           image: ${{ secrets.ECR_REGISTRY }}/innovatech-frontend:latest
-
       - name: Deploy en Amazon ECS
         uses: aws-actions/amazon-ecs-deploy-task-definition@v1
         with:
