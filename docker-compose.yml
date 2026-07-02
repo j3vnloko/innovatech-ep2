@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
 
   db:
@@ -16,6 +14,11 @@ services:
       - db_data:/var/lib/mysql
     networks:
       - innovatech-net
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-padmin123"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
 
   backend:
     build: ./back-Despachos_SpringBoot/Springboot-API-REST-DESPACHO
@@ -29,7 +32,8 @@ services:
     ports:
       - "8081:8081"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - innovatech-net
 
